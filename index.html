@@ -1,73 +1,64 @@
 <!doctype html>
 <html lang="pt-BR">
-
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>T2 Barbershop</title>
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=Big+Shoulders+Display:wght@700;800&display=swap">
-  <link rel="stylesheet" href="style.css">
-  <!-- Configuração do PWA -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#c8171e">
-
-  <link rel="apple-touch-icon" href="image/apple-touch-icon.png">
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T2 Barbershop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=Big+Shoulders+Display:wght@700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c8171e">
+<link rel="apple-touch-icon" href="image/apple-touch-icon.png">
 </head>
-
 <body>
-  <header class="top">
-    <div class="wrap bar">
-      <a class="brand" href="#topo"><span class="mark stripes" aria-hidden="true"></span><span id="marca">T2
-          Barbershop</span></a>
-      <nav aria-label="Seções">
-        <a href="#servicos">Serviços</a>
-        <a href="#barbeiros">Barbeiros</a>
-        <a href="#trabalhos">Trabalhos</a>
-        <a class="btn btn-primary btn-small" href="#agendar">Agendar</a>
-      </nav>
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="#topo"><span class="mark stripes" aria-hidden="true"></span><span id="marca">Barbearia Navalha</span></a>
+    <nav aria-label="Seções">
+      <a href="#servicos">Serviços</a>
+      <a href="#barbeiros">Barbeiros</a>
+      <a href="#trabalhos">Trabalhos</a>
+      <a class="btn btn-primary btn-small" href="#agendar">Agendar</a>
+    </nav>
+  </div>
+</header>
+
+<main id="topo">
+  <section class="hero">
+    <div class="wrap">
+      <figure class="hero-art" id="heroArt"><img id="logoImg" alt="Logo T2 Barbershop" src="image/logo.jpg"></figure>
     </div>
-  </header>
-
-  <main id="topo">
-    <section class="hero">
-      <div class="wrap">
-        <figure class="hero-art" id="heroArt"><img id="logoImg" alt="Logo T2 Barbershop" src="image/logo.jpg"></figure>
-      </div>
-      <div class="wrap hero-grid">
-        <div>
-          <h1>Corte, barba e navalha. Hora marcada, sem fila.</h1>
-          <p class="lead">Escolha o serviço, o barbeiro e o horário. O pedido chega pronto no WhatsApp da barbearia, e a
-            confirmação vem por lá.</p>
-          <div class="cta-row">
-            <a class="btn btn-primary" href="#agendar">Agendar horário</a>
-            <a class="btn" href="#servicos">Ver preços</a>
-          </div>
+    <div class="wrap hero-grid">
+      <div>
+        <h1>Corte, barba e navalha. Hora marcada, sem fila.</h1>
+        <p class="lead">Escolha o serviço, o barbeiro e o horário. O pedido chega pronto no WhatsApp da barbearia, e a confirmação vem por lá.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#agendar">Agendar horário</a>
+          <a class="btn" href="#servicos">Ver preços</a>
         </div>
-        <aside class="status" aria-label="Horário de funcionamento">
-          <span class="stripes-edge stripes" aria-hidden="true"></span>
-          <div class="status-line"><span class="dot" id="dot" aria-hidden="true"></span><span
-              id="statusTxt">Carregando</span></div>
-          <p class="status-sub" id="statusSub"></p>
-          <dl class="hours" id="semana"></dl>
-        </aside>
       </div>
-    </section>
+      <aside class="status" aria-label="Horário de funcionamento">
+        <span class="stripes-edge stripes" aria-hidden="true"></span>
+        <div class="status-line"><span class="dot" id="dot" aria-hidden="true"></span><span id="statusTxt">Carregando</span></div>
+        <p class="status-sub" id="statusSub"></p>
+        <dl class="hours" id="semana"></dl>
+      </aside>
+    </div>
+  </section>
 
-    <div class="pole-band stripes" aria-hidden="true"></div>
+  <div class="pole-band stripes" aria-hidden="true"></div>
 
-    <section class="block" id="servicos">
-      <div class="wrap">
-        <div class="head">
-          <h2>Serviços e preços</h2>
-          <p>Valores em reais. O tempo é a duração do atendimento e define os horários que aparecem na agenda.</p>
-        </div>
-        <ul class="menu" id="menu"></ul>
+  <section class="block" id="servicos">
+    <div class="wrap">
+      <div class="head">
+        <h2>Serviços e preços</h2>
+        <p>Valores em reais. O tempo é a duração do atendimento e define os horários que aparecem na agenda.</p>
       </div>
-    </section>
+      <ul class="menu" id="menu"></ul>
+    </div>
+  </section>
 
-    <section class="block sem-topo" id="barbeiros"></section>
+  <section class="block sem-topo" id="barbeiros">
     <div class="wrap">
       <div class="head">
         <h2>Quem corta</h2>
@@ -75,9 +66,9 @@
       </div>
       <div class="team" id="equipe"></div>
     </div>
-    </section>
+  </section>
 
-    <section class="block sem-topo" id="trabalhos"></section>
+  <section class="block sem-topo" id="trabalhos">
     <div class="wrap">
       <div class="head">
         <h2>Trabalhos</h2>
@@ -85,117 +76,95 @@
       </div>
       <div class="gallery" id="galeria"></div>
     </div>
-    </section>
+  </section>
 
-    <div class="pole-band stripes" aria-hidden="true"></div>
+  <div class="pole-band stripes" aria-hidden="true"></div>
 
-    <section class="block" id="agendar">
-      <div class="wrap">
-        <div class="head">
-          <h2>Agende seu horário</h2>
-          <p>Quatro passos. No final, o WhatsApp abre com a mensagem pronta para você enviar.</p>
-        </div>
-        <div class="book">
-          <form class="panel" id="form" novalidate>
-            <fieldset>
-              <legend><span class="step" aria-hidden="true">1</span>Serviço</legend>
-              <div class="opts" id="servicoOpcoes" role="radiogroup" aria-label="Serviço"></div>
-            </fieldset>
+  <section class="block" id="agendar">
+    <div class="wrap">
+      <div class="head">
+        <h2>Agende seu horário</h2>
+        <p>Quatro passos. No final, o WhatsApp abre com a mensagem pronta para você enviar.</p>
+      </div>
+      <div class="book">
+        <form class="panel" id="form" novalidate>
+          <fieldset>
+            <legend><span class="step" aria-hidden="true">1</span>Serviço</legend>
+            <div class="opts" id="servicoOpcoes" role="radiogroup" aria-label="Serviço"></div>
+          </fieldset>
 
-            <fieldset>
-              <legend><span class="step" aria-hidden="true">2</span>Barbeiro e dia</legend>
-              <div class="two">
-                <div>
-                  <label class="sub" for="barbeiro">Barbeiro</label>
-                  <select id="barbeiro"></select>
-                </div>
-                <div>
-                  <label class="sub" for="data">Data</label>
-                  <input type="date" id="data">
-                </div>
+          <fieldset>
+            <legend><span class="step" aria-hidden="true">2</span>Barbeiro e dia</legend>
+            <div class="two">
+              <div>
+                <label class="sub" for="barbeiro">Barbeiro</label>
+                <select id="barbeiro"></select>
               </div>
-            </fieldset>
-
-            <fieldset>
-              <legend><span class="step" aria-hidden="true">3</span>Horário</legend>
-              <div id="horarios"></div>
-            </fieldset>
-
-            <div class="field">
-              <label class="lbl" for="nome"><span class="step" aria-hidden="true">4</span>Seu nome</label>
-              <input type="text" id="nome" autocomplete="name" placeholder="Como devemos te chamar?">
+              <div>
+                <label class="sub" for="data">Data</label>
+                <input type="date" id="data">
+              </div>
             </div>
-          </form>
+          </fieldset>
 
-          <aside class="panel summary" aria-label="Resumo do agendamento">
-            <h3>Resumo</h3>
-            <dl class="sum">
-              <div>
-                <dt>Serviço</dt>
-                <dd id="rServ"></dd>
-              </div>
-              <div>
-                <dt>Barbeiro</dt>
-                <dd id="rBarb"></dd>
-              </div>
-              <div>
-                <dt>Data</dt>
-                <dd id="rData"></dd>
-              </div>
-              <div>
-                <dt>Hora</dt>
-                <dd id="rHora"></dd>
-              </div>
-              <div class="total">
-                <dt>Total</dt>
-                <dd id="rTotal"></dd>
-              </div>
-            </dl>
-            <a class="btn btn-primary" id="enviar" href="#agendar" target="_blank" rel="noopener"
-              aria-disabled="true">Agendar pelo WhatsApp</a>
-            <p class="falta" id="falta" aria-live="polite"></p>
-            <p class="aviso" id="aviso" hidden></p>
-            <details class="previa-wrap">
-              <summary>Ver mensagem</summary>
-              <pre id="previa"></pre>
-              <button type="button" class="btn btn-small copiar" id="copiar">Copiar mensagem</button>
-            </details>
-            <p class="fine">O horário só fica reservado depois que a barbearia confirmar pelo WhatsApp.</p>
-          </aside>
-        </div>
-      </div>
-    </section>
-  </main>
+          <fieldset>
+            <legend><span class="step" aria-hidden="true">3</span>Horário</legend>
+            <div id="horarios"></div>
+          </fieldset>
 
-  <footer>
-    <div class="wrap foot">
-      <div>
-        <h3 id="fMarca"></h3>
-        <p id="fEnd"></p>
-      </div>
-      <div>
-        <h3>WhatsApp</h3>
-        <p><strong id="fZap"></strong></p>
-        <p id="fOutro"></p>
-        <p>Se o botão não abrir o WhatsApp, copie a mensagem do resumo e envie para este número.</p>
-      </div>
-      <div>
-        <h3>Instagram</h3>
-        <p><a id="fInsta" href="#" target="_blank" rel="noopener">Instagram</a></p>
+          <div class="field">
+            <label class="lbl" for="nome"><span class="step" aria-hidden="true">4</span>Seu nome</label>
+            <input type="text" id="nome" autocomplete="name" placeholder="Como devemos te chamar?">
+          </div>
+        </form>
+
+        <aside class="panel summary" aria-label="Resumo do agendamento">
+          <h3>Resumo</h3>
+          <dl class="sum">
+            <div><dt>Serviço</dt><dd id="rServ"></dd></div>
+            <div><dt>Barbeiro</dt><dd id="rBarb"></dd></div>
+            <div><dt>Data</dt><dd id="rData"></dd></div>
+            <div><dt>Hora</dt><dd id="rHora"></dd></div>
+            <div class="total"><dt>Total</dt><dd id="rTotal"></dd></div>
+          </dl>
+          <a class="btn btn-primary" id="enviar" href="#agendar" target="_blank" rel="noopener" aria-disabled="true">Agendar pelo WhatsApp</a>
+          <p class="falta" id="falta" aria-live="polite"></p>
+          <p class="aviso" id="aviso" hidden></p>
+          <details class="previa-wrap">
+            <summary>Ver mensagem</summary>
+            <pre id="previa"></pre>
+            <button type="button" class="btn btn-small copiar" id="copiar">Copiar mensagem</button>
+          </details>
+          <p class="fine">O horário só fica reservado depois que a barbearia confirmar pelo WhatsApp.</p>
+        </aside>
       </div>
     </div>
-  </footer>
+  </section>
+</main>
 
-  <script src="script.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(() => console.log("PWA Ativado com sucesso!"))
-          .catch((err) => console.log("Erro ao ativar PWA: ", err));
-      });
-    }
-  </script>
+<footer>
+  <div class="wrap foot">
+    <div>
+      <h3 id="fMarca"></h3>
+      <p id="fEnd"></p>
+    </div>
+    <div>
+      <h3>WhatsApp</h3>
+      <p><strong id="fZap"></strong></p>
+      <p id="fOutro"></p>
+      <p>Se o botão não abrir o WhatsApp, copie a mensagem do resumo e envie para este número.</p>
+    </div>
+    <div>
+      <h3>Instagram</h3>
+      <p><a id="fInsta" href="#" target="_blank" rel="noopener">Instagram</a></p>
+    </div>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="dados.js"></script>
+<script src="script.js"></script>
 </body>
-
 </html>

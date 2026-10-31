@@ -1,20 +1,32 @@
 {
   "name": "T2 Barbershop",
   "short_name": "T2 Barber",
+  "description": "Agende seu horário na T2 Barbershop.",
+  "lang": "pt-BR",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0b0b0c",
   "theme_color": "#c8171e",
   "icons": [
     {
-      "src": "image/logo.jpg",
+      "src": "image/icon-192.png",
       "sizes": "192x192",
-      "type": "image/jpeg"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "image/logo.jpg",
+      "src": "image/icon-512.png",
       "sizes": "512x512",
-      "type": "image/jpeg"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "image/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
