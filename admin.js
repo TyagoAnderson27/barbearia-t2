@@ -42,6 +42,12 @@
   }
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
+  // Mantém o login salvo neste aparelho: o dono só digita e-mail e senha uma vez, até tocar em "Sair".
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((e) => console.warn("Persistência:", e));
+  // PWA: registra o service worker também por aqui (caminho relativo, funciona no GitHub Pages)
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch((e) => console.warn("Service worker:", e)));
+  }
   const db = firebase.firestore();
 
   let reservas = [];
