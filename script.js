@@ -1,4 +1,12 @@
- const $ = (s) => document.querySelector(s);
+// PWA: registra o service worker (caminho relativo, funciona no GitHub Pages)
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./sw.js").catch(function (e) { console.warn("Service worker:", e); });
+  });
+}
+
+  // ---- Utilidades ----
+  const $ = (s) => document.querySelector(s);
   const pad = (n) => String(n).padStart(2, "0");
   const toISO = (d) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
   const parseISO = (s) => { const p = s.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); };
@@ -8,18 +16,18 @@
   const DIAS = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
   const DIAS_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
   const hLabel = (h) => (h % 1 ? pad(Math.floor(h)) + "h30" : h + "h");
- 
+
   function zapFmt(n) {
     const d = n.replace(/\D/g, "").replace(/^55/, "");
     if (d.length === 11) return "(" + d.slice(0, 2) + ") " + d.slice(2, 7) + "-" + d.slice(7);
     if (d.length === 10) return "(" + d.slice(0, 2) + ") " + d.slice(2, 6) + "-" + d.slice(6);
     return n;
   }
- 
-  const state = { servico: SERVICOS[0].id, barbeiro: "qualquer", data: null, hora: null, nome: "" };
+
+  const state = { servico: SERVICOS[0].id, barbeiro: "qualquer", data: null, hora: null, nome: "", tel: "" };
   const svc = () => SERVICOS.find((s) => s.id === state.servico);
   const brb = () => BARBEIROS.find((b) => b.id === state.barbeiro);
- 
+
   function slotsDoDia(dia, duracao) {
     const h = CONFIG.horarios[dia.getDay()];
     if (!h) return [];
@@ -39,7 +47,7 @@
     }
     return t;
   }
- 
+
   // ---- Agenda compartilhada (Firebase) ----
   // Só funciona se o firebase-config.js estiver preenchido. Sem isso, a página
   // mostra todos os horários e a barbearia confirma tudo pelo WhatsApp.
@@ -76,7 +84,26 @@
     if (state.barbeiro === "qualquer") return BARBEIROS.some((b) => b.id !== "qualquer" && !ocupado(b.id));
     return !ocupado(state.barbeiro);
   }
- 
+
+  // Guarda o pedido no Firebase para o dono confirmar no painel. Falhar aqui nunca impede o WhatsApp.
+  let ultimoPedido = "";
+  function registrarPedido() {
+    if (!AGENDA.ativa) return;
+    const tel = telDigitos(state.tel);
+    const chave = [state.data, state.hora, state.servico, state.barbeiro, tel].join("|");
+    if (!tel || chave === ultimoPedido) return;
+    ultimoPedido = chave;
+    AGENDA.db.collection("pedidos").add({
+      nome: state.nome.trim().slice(0, 60),
+      telefone: tel,
+      servicoId: svc().id, servicoNome: svc().nome,
+      barbeiroId: brb().id, barbeiroNome: brb().nome,
+      data: state.data, inicio: state.hora, fim: state.hora + svc().min,
+      status: "pendente",
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch((e) => { ultimoPedido = ""; console.warn("Pedido não registrado:", e); });
+  }
+
   // ---- Cabeçalho e rodapé ----
   function textoMarca() {
     $("#marca").textContent = CONFIG.nome;
@@ -117,7 +144,7 @@
       return;
     }
   }
- 
+
   // ---- Serviços, equipe e formulário ----
   function renderServicos() {
     $("#menu").innerHTML = SERVICOS.map((s) =>
@@ -158,7 +185,7 @@
       if (img.complete && img.naturalWidth === 0) semFoto();
     });
   }
- 
+
   function renderSlots() {
     const box = $("#horarios");
     const dia = parseISO(state.data);
@@ -184,7 +211,7 @@
     ).join("") + "</div>" +
     (AGENDA.falhou[state.data] ? '<p class="fine">Não foi possível conferir os horários já ocupados agora. A barbearia confirma pelo WhatsApp.</p>' : "");
   }
- 
+
   // ---- Resumo e mensagem do WhatsApp ----
   function dataLonga() {
     const d = parseISO(state.data);
@@ -204,10 +231,18 @@
       "Aguardo a confirmação."
     ].join("\n");
   }
+  // Aceita (85) 99999-9999, 85999999999 ou 5585999999999. Devolve "55" + DDD + número, ou "" se inválido.
+  function telDigitos(t) {
+    let d = String(t || "").replace(/\D/g, "").replace(/^0+/, "");
+    if ((d.length === 12 || d.length === 13) && d.indexOf("55") === 0) d = d.slice(2);
+    return d.length === 10 || d.length === 11 ? "55" + d : "";
+  }
+  function listaPt(f) { return f.length > 1 ? f.slice(0, -1).join(", ") + " e " + f[f.length - 1] : f.join(""); }
   function faltando() {
     const f = [];
     if (state.hora == null) f.push("horário");
     if (state.nome.trim().length < 2) f.push("nome");
+    if (AGENDA.ativa && !telDigitos(state.tel)) f.push("WhatsApp com DDD");
     return f;
   }
   function atualizarResumo() {
@@ -216,15 +251,15 @@
     $("#rData").textContent = dataLonga();
     $("#rHora").textContent = state.hora == null ? "Escolha" : horaFmt(state.hora);
     $("#rTotal").textContent = precoTxt(svc().preco);
- 
+
     const f = faltando();
     const btn = $("#enviar");
     $("#aviso").hidden = true;
     if (f.length) {
       btn.setAttribute("aria-disabled", "true");
       btn.setAttribute("href", "#agendar");
-      $("#falta").textContent = "Falta: " + f.join(" e ") + ".";
-      $("#previa").textContent = "Escolha o horário e informe seu nome para ver a mensagem.";
+      $("#falta").textContent = "Falta: " + listaPt(f) + ".";
+      $("#previa").textContent = "Escolha o horário e preencha seus dados para ver a mensagem.";
     } else {
       const msg = mensagem();
       btn.removeAttribute("aria-disabled");
@@ -243,7 +278,7 @@
       });
     }
   }
- 
+
   function escolherServico(id) {
     state.servico = id;
     const r = $("#sv-" + id); if (r) r.checked = true;
@@ -254,7 +289,7 @@
     $("#barbeiro").value = id;
     atualizarTudo();
   }
- 
+
   // ---- Eventos ----
   document.addEventListener("click", (e) => {
     const a = e.target.closest("a[data-servico]"); if (a) escolherServico(a.dataset.servico);
@@ -271,20 +306,23 @@
     if (e.target.name === "hora") { state.hora = Number(e.target.value); atualizarResumo(); }
   });
   $("#nome").addEventListener("input", (e) => { state.nome = e.target.value; atualizarResumo(); });
+  $("#tel").addEventListener("input", (e) => { state.tel = e.target.value; atualizarResumo(); });
   $("#form").addEventListener("submit", (e) => e.preventDefault());
- 
+
   $("#enviar").addEventListener("click", (e) => {
     if (e.currentTarget.getAttribute("aria-disabled") === "true") {
       e.preventDefault();
       if (state.hora == null) { const s = document.querySelector('input[name="hora"]'); if (s) s.focus(); else $("#data").focus(); }
-      else $("#nome").focus();
+      else if (state.nome.trim().length < 2) $("#nome").focus();
+      else $("#tel").focus();
       return;
     }
+    registrarPedido();
     const av = $("#aviso");
     av.textContent = "Abrimos o WhatsApp com a mensagem pronta. Falta você enviar. Se não abrir, copie a mensagem e mande para " + zapFmt(CONFIG.whatsapp) + ".";
     av.hidden = false;
   });
- 
+
   $("#copiar").addEventListener("click", async () => {
     const pre = $("#previa");
     const btn = $("#copiar");
@@ -298,7 +336,7 @@
     }
     setTimeout(() => { btn.textContent = "Copiar mensagem"; }, 2500);
   });
- 
+
   // ---- Início ----
   textoMarca();
   renderSemana();
@@ -307,9 +345,9 @@
   renderEquipe();
   renderGaleria();
   iniciarAgenda();
+  $("#campoTel").hidden = !AGENDA.ativa;
   state.data = toISO(proximoDiaAberto());
   const campoData = $("#data");
   campoData.min = toISO(new Date());
   campoData.value = state.data;
   atualizarTudo();
- 

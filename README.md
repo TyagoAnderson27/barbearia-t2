@@ -5,6 +5,7 @@ Site de uma página para a T2 Barbershop, com tabela de preços, equipe, galeria
 ## Funcionalidades
 
 - **Agendamento em 4 passos:** serviço, barbeiro e data, horário e nome. No final, o botão abre o WhatsApp da barbearia com a mensagem do pedido já preenchida.
+- **Horários que saem do ar quando confirmados:** o dono confirma pelo painel e o horário some do site (com Firebase).
 - **Horários calculados automaticamente:** a lista de horários respeita o expediente de cada dia da semana, a duração do serviço escolhido e uma antecedência mínima para o mesmo dia. Horários que já passaram não aparecem.
 - **Status em tempo real:** mostra "Aberto agora" ou "Fechado agora" e quando a barbearia abre de novo.
 - **Tabela de preços** com valores e duração de cada serviço. Serviços sem preço fixo aparecem como "Sob consulta".
@@ -23,9 +24,13 @@ Site de uma página para a T2 Barbershop, com tabela de preços, equipe, galeria
 
 ```
 .
-├── index.html      # estrutura da página
-├── style.css       # visual e cores
-├── script.js       # dados da barbearia e lógica do agendamento
+├── index.html          # estrutura da página
+├── style.css           # visual e cores
+├── dados.js            # dados da barbearia: serviços, barbeiros, horários, galeria
+├── script.js           # lógica do agendamento
+├── firebase-config.js  # dados do projeto Firebase (agenda compartilhada)
+├── admin.html          # painel do dono para confirmar e cancelar horários
+├── admin.js            # lógica do painel
 ├── image/
 │   ├── logo.jpg    # logo exibida no topo
 │   └── ...         # fotos da galeria
@@ -43,7 +48,7 @@ Para atualizar a página automaticamente enquanto edita, use a extensão **Live 
 
 ## Como configurar
 
-Todos os dados da barbearia ficam no começo do `script.js`.
+Todos os dados da barbearia ficam no arquivo `dados.js`.
 
 ### Dados gerais (`CONFIG`)
 
@@ -119,15 +124,69 @@ Aguardo a confirmação.
 
 O pedido só vale depois que a barbearia confirmar a resposta no WhatsApp.
 
+### Agenda compartilhada (opcional, com Firebase)
+
+Com o `firebase-config.js` preenchido, o dono confirma cada horário no painel `admin.html` (com login) e ele **some do site** para os outros clientes. O site mostra um horário só se o barbeiro escolhido estiver livre, ou, em "Qualquer barbeiro", se pelo menos um dos dois estiver livre. Serviços mais longos também respeitam o que já está marcado.
+
+Os dados ficam em duas coleções do Firestore:
+
+- `agendamentos`: nome, telefone, serviço, barbeiro e horário. Só o dono consegue ler e escrever.
+- `pedidos`: pedidos feitos pelo site. Qualquer pessoa consegue criar (com os campos validados), só o dono lê e altera.
+- `ocupados`: apenas data, barbeiro e faixa de horas. A página pública lê esta coleção, que não contém dados pessoais.
+
+Regras do Firestore (troque `UID_DO_DONO` pelo UID do usuário criado em Authentication; para mais de um admin, coloque vários UIDs na lista):
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function admin() {
+      return request.auth != null && request.auth.uid in ["UID_DO_DONO"];
+    }
+    function texto(v, min, max) {
+      return v is string && v.size() >= min && v.size() <= max;
+    }
+
+    match /ocupados/{id} {
+      allow read: if true;
+      allow write: if admin();
+    }
+    match /agendamentos/{id} {
+      allow read, write: if admin();
+    }
+    match /pedidos/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['nome','telefone','servicoId','servicoNome','barbeiroId','barbeiroNome','data','inicio','fim','status','criadoEm'])
+        && texto(request.resource.data.nome, 2, 60)
+        && texto(request.resource.data.telefone, 12, 13)
+        && texto(request.resource.data.servicoId, 1, 30)
+        && texto(request.resource.data.servicoNome, 1, 60)
+        && texto(request.resource.data.barbeiroId, 1, 30)
+        && texto(request.resource.data.barbeiroNome, 1, 60)
+        && texto(request.resource.data.data, 10, 10)
+        && request.resource.data.inicio is number
+        && request.resource.data.fim is number
+        && request.resource.data.status == 'pendente'
+        && request.resource.data.criadoEm == request.time;
+      allow read, update, delete: if admin();
+    }
+  }
+}
+```
+
+**Pedidos pelo site:** ao tocar em "Agendar pelo WhatsApp", o site também grava o pedido (com o WhatsApp do cliente) na coleção `pedidos`. No painel, a lista "Pedidos novos" aparece sozinha; **Confirmar** preenche o formulário, **Conversar** abre o WhatsApp do cliente e **Recusar** tira o pedido da lista. Depois de confirmar, o botão **Avisar cliente** manda a confirmação pelo WhatsApp.
+
+Sem o Firebase configurado, a página funciona do mesmo jeito, mas mostra todos os horários e a barbearia confere a agenda antes de confirmar.
+
 ### Limitações atuais
 
-- A página não sabe quais horários já foram ocupados por outros clientes, então dois pedidos para o mesmo horário são possíveis. A confirmação manual resolve isso.
+- O horário só é bloqueado quando o dono o confirma no painel. Pedidos que ainda não foram confirmados não bloqueiam nada.
 - O envio depende de o cliente apertar "enviar" no WhatsApp.
 
 ## Próximos passos
 
 - Robô de WhatsApp (API oficial da Meta) para ler o pedido, conferir a agenda e confirmar o horário automaticamente.
-- Banco de dados compartilhado (Firebase) para a página esconder os horários já reservados.
+- Bloqueio de horários no painel (almoço, folga).
 - Fotos reais dos cortes e dos barbeiros.
 
 ## Contato
