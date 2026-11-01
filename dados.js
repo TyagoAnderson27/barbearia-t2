@@ -1,4 +1,4 @@
- // ---- Dados da barbearia: edite aqui (usados pela página e pelo painel admin.html) ----
+// ---- Dados da barbearia: edite aqui (usados pela página e pelo painel admin.html) ----
   const CONFIG = {
     nome: "T2 Barbershop",
     whatsapp: "5585994471125",           // código do país + DDD + número, só dígitos
@@ -36,9 +36,11 @@
     { id: "luzes",   nome: "Luzes",            desc: "Valor combinado conforme o cabelo.",            min: 90, preco: null },
     { id: "combo",   nome: "Combo",            desc: "Cabelo, barba e sobrancelha no mesmo atendimento.", min: 75, preco: 60 }
   ];
+  // whatsapp: número do barbeiro (código do país + DDD + número, só dígitos).
+  // Se o barbeiro for escolhido, o pedido vai para o número dele.
+  // Deixe "" para usar o número da barbearia (CONFIG.whatsapp). "Qualquer barbeiro" sempre usa o da barbearia.
   const BARBEIROS = [
     { id: "qualquer", nome: "Qualquer barbeiro" },
-    { id: "thiago", nome: "Thiago", fn: "Corte, barba e sobrancelha." },
-    { id: "thiego", nome: "Thiego", fn: "Corte, barba e sobrancelha." }
+    { id: "thiago", nome: "Thiago", fn: "Corte, barba e sobrancelha.", whatsapp: "558594471125" },
+    { id: "thiego", nome: "Thiego", fn: "Corte, barba e sobrancelha.", whatsapp: "558596978191" }
   ];
- 

@@ -212,6 +212,12 @@ if ("serviceWorker" in navigator) {
     (AGENDA.falhou[state.data] ? '<p class="fine">Não foi possível conferir os horários já ocupados agora. A barbearia confirma pelo WhatsApp.</p>' : "");
   }
 
+  // Número que recebe o pedido: o do barbeiro escolhido ou, sem ele, o da barbearia
+  function zapDestino() {
+    const n = (brb().whatsapp || "").replace(/\D/g, "");
+    return n.length >= 12 ? n : CONFIG.whatsapp.replace(/\D/g, "");
+  }
+
   // ---- Resumo e mensagem do WhatsApp ----
   function dataLonga() {
     const d = parseISO(state.data);
@@ -263,7 +269,7 @@ if ("serviceWorker" in navigator) {
     } else {
       const msg = mensagem();
       btn.removeAttribute("aria-disabled");
-      btn.setAttribute("href", "https://wa.me/" + CONFIG.whatsapp.replace(/\D/g, "") + "?text=" + encodeURIComponent(msg));
+      btn.setAttribute("href", "https://wa.me/" + zapDestino() + "?text=" + encodeURIComponent(msg));
       $("#falta").textContent = "";
       $("#previa").textContent = msg;
     }
@@ -319,7 +325,7 @@ if ("serviceWorker" in navigator) {
     }
     registrarPedido();
     const av = $("#aviso");
-    av.textContent = "Abrimos o WhatsApp com a mensagem pronta. Falta você enviar. Se não abrir, copie a mensagem e mande para " + zapFmt(CONFIG.whatsapp) + ".";
+    av.textContent = "Abrimos o WhatsApp com a mensagem pronta. Falta você enviar. Se não abrir, copie a mensagem e mande para " + zapFmt(zapDestino()) + ".";
     av.hidden = false;
   });
 
