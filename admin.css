@@ -17,6 +17,11 @@
   .confirmar .field + .field { margin-top: 16px; }
   .confirmar .two { margin-top: 16px; }
   .agenda .acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; align-items: center; }
+  /* Celular: texto em cima e botões embaixo (antes os botões ocupavam a linha e o texto ficava em uma coluna estreita) */
+  @media (max-width: 699px) {
+    .agenda li { grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+    .agenda .acoes { grid-column: 1 / -1; justify-content: flex-start; }
+  }
   .sem-tel { color: var(--muted); font-size: 14px; }
   .pedidos { margin-bottom: 24px; }
   .pedidos h2 { margin-bottom: 4px; font-size: 34px; }
