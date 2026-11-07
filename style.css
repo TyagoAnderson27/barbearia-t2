@@ -200,3 +200,133 @@ footer { background: var(--surface); border-top: 1px solid var(--line); padding-
 img { max-width: 100%; }
 
 section.block.sem-topo { padding-top: 0; }
+/* ==========================================================================
+   PRELOADER T2 BARBERSHOP (PREMIUM DARK)
+   ========================================================================== */
+:root {
+    --barber-red: #e63946;       /* Vermelho vivo igual ao botão do site */
+    --barber-red-glow: #ff4d5a;  /* Vermelho cintilante para o efeito de brilho */
+    --barber-dark: #121212;      /* Preto fosco de fundo do preloader */
+}
+
+#preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: var(--barber-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s ease;
+}
+
+.preloader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+}
+
+/* Área que envelopa o círculo e o T2 */
+.logo-wrapper {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* O Círculo de Brilho Vermelho Girando */
+.preloader-circle {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--barber-red);
+    border-bottom-color: var(--barber-red-glow);
+    animation: girarBarber 2.5s linear infinite;
+    box-shadow: 0 0 15px rgba(230, 57, 70, 0.3);
+    top: 0;
+    left: 0;
+}
+
+/* Segundo anel de brilho invertido para dar profundidade */
+.preloader-circle::after {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-left-color: var(--barber-red);
+    border-right-color: #ffffff;
+    animation: girarBarberInverso 1.5s linear infinite;
+    opacity: 0.4;
+}
+
+/* Letras "T2" perfeitamente centralizadas */
+.preloader-logo {
+    font-family: 'Montserrat', 'Impact', sans-serif;
+    font-size: 5rem;
+    color: #ffffff;
+    font-weight: 800; /* Força letras bem grossas e marcantes */
+    line-height: 1;
+    letter-spacing: 1px;
+    z-index: 2;
+    animation: pulsoBarber 2s ease-in-out infinite alternate;
+    text-shadow: 0 0 10px rgba(230, 57, 70, 0.5);
+}
+
+/* Nome da barbearia posicionado logo abaixo */
+.preloader-name {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #ffffff;
+    margin-top: 25px;
+}
+
+.preloader-sparkle {
+    color: var(--barber-red);
+    margin-top: 5px;
+    font-size: 1.2rem;
+}
+
+/* Esconder suavemente */
+#preloader.ocultar {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* ANIMAÇÕES DA ABERTURA */
+@keyframes girarBarber {
+    0% {
+        transform: rotate(0deg);
+        box-shadow: 0 0 15px rgba(230, 57, 70, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(230, 57, 70, 0.7);
+    }
+    100% {
+        transform: rotate(360deg);
+        box-shadow: 0 0 15px rgba(230, 57, 70, 0.3);
+    }
+}
+
+@keyframes girarBarberInverso {
+    0% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+}
+
+@keyframes pulsoBarber {
+    0% { transform: scale(0.95); opacity: 0.9; }
+    100% { transform: scale(1.05); opacity: 1; }
+}

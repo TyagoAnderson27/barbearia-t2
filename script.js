@@ -357,3 +357,10 @@ if ("serviceWorker" in navigator) {
   campoData.min = toISO(new Date());
   campoData.value = state.data;
   atualizarTudo();
+
+  window.addEventListener('load', () => {
+    const preloader = document.getElementById('preloader');
+    setTimeout(() => {
+        preloader.classList.add('ocultar');
+    }, 2000); 
+});

@@ -7,44 +7,27 @@
 <title>Agenda T2 Barbershop</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=Big+Shoulders+Display:wght@700;800&display=swap">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="admin.css">
 <link rel="manifest" href="manifest-admin.json">
 <meta name="theme-color" content="#c8171e">
 <link rel="apple-touch-icon" href="image/admin-apple-touch-icon.png">
-<style>
-  .login { max-width: 460px; margin: 0 auto; }
-  .login .field + .field { margin-top: 16px; }
-  .login .btn, .confirmar .btn { margin-top: 20px; width: 100%; }
-  .erro { margin-top: 12px; min-height: 1.5em; color: var(--red-text); font-weight: 500; }
-  .ok { margin-top: 12px; min-height: 1.5em; font-weight: 500; }
-  .topo-admin { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; margin-bottom: 24px; }
-  .topo-admin > div { min-width: 0; flex: 1 1 200px; }
-  .grade { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start; }
-  @media (min-width: 940px) { .grade { grid-template-columns: 1.3fr 1fr; gap: 32px; } }
-  .agenda { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--ink); }
-  .agenda li { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 16px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
-  .agenda .hora { font: 700 24px/1 var(--font-label); font-variant-numeric: tabular-nums; }
-  .agenda .info { min-width: 0; overflow-wrap: anywhere; }
-  .agenda .info b { font-weight: 600; }
-  .agenda .info span { display: block; color: var(--muted); font-size: 15px; }
-  .vazio-dia { padding: 18px 0; color: var(--muted); }
-  .confirmar .field + .field { margin-top: 16px; }
-  .confirmar .two { margin-top: 16px; }
-  .agenda .acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; align-items: center; }
-  .sem-tel { color: var(--muted); font-size: 14px; }
-  .pedidos { margin-bottom: 24px; }
-  .pedidos h2 { margin-bottom: 4px; font-size: 34px; }
-  .pedidos .fine { margin: 0 0 12px; }
-  .pedidos .agenda { border-top-color: var(--red); }
-  .info-pedido { margin: -6px 0 16px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--red); font-weight: 500; }
-  .btn-perigo { border-color: var(--red-text); color: var(--red-text); }
-  input[type="password"] { width: 100%; min-height: 48px; padding: 10px 14px; border-radius: 6px; border: 1px solid var(--line);
-    background: var(--bg); color: var(--ink); font: 500 17px/1.2 var(--font-body); }
-  .login h2, .confirmar h2 { margin-bottom: 16px; font-size: 34px; }
-  .confirmar .two + .field { margin-top: 16px; }
-  .confirmar .fine { margin: -6px 0 16px; }
-</style>
+
 </head>
 <body>
+  <!-- Tela de Carregamento ADM — T2 Barbershop -->
+<div id="preloader">
+    <div class="preloader-content">
+        <div class="logo-wrapper">
+            <div class="preloader-circle"></div> 
+            <div class="preloader-logo">T2</div>
+        </div>
+        <div class="preloader-name">
+            Painel ADM
+            <div class="preloader-sparkle">⚙️</div>
+        </div>
+    </div>
+</div>
+
 <header class="top">
   <div class="wrap bar">
     <span class="brand"><span class="mark stripes" aria-hidden="true"></span><span id="marca">T2 Barbershop</span></span>
