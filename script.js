@@ -24,8 +24,26 @@ if ("serviceWorker" in navigator) {
     return n;
   }
 
-  const state = { servico: SERVICOS[0].id, barbeiro: "qualquer", data: null, hora: null, nome: "", tel: "" };
-  const svc = () => SERVICOS.find((s) => s.id === state.servico);
+  // % de desconto do combo (2 ou mais serviços). Pode mudar em dados.js com descontoCombo: 5 (0 desliga)
+  const PCT = typeof CONFIG.descontoCombo === "number" ? CONFIG.descontoCombo : 5;
+  const state = { servicos: [], barbeiro: "qualquer", data: null, hora: null, nome: "", tel: "" };
+  // Serviços escolhidos somados em um único atendimento: tempo total, subtotal e desconto de combo (2 ou mais).
+  const svc = () => {
+    const sel = SERVICOS.filter((s) => state.servicos.indexOf(s.id) >= 0);
+    if (!sel.length) return { id: "", nome: "", lista: [], qtd: 0, min: 0, semPreco: false, subtotal: 0, pct: 0, desconto: 0, preco: 0 };
+    const min = sel.reduce((a, s) => a + s.min, 0);
+    const semPreco = sel.some((s) => s.preco == null);
+    const subtotal = semPreco ? null : sel.reduce((a, s) => a + s.preco, 0);
+    const pct = sel.length > 1 && subtotal != null ? PCT : 0;
+    const desconto = Math.round(subtotal * pct) / 100;
+    return {
+      id: sel.length > 1 ? "combo-montado" : sel[0].id,
+      nome: sel.map((s) => s.nome).join(" + "),
+      lista: sel, qtd: sel.length, min: min, semPreco: semPreco,
+      subtotal: subtotal, pct: pct, desconto: desconto,
+      preco: subtotal == null ? null : subtotal - desconto
+    };
+  };
   const brb = () => BARBEIROS.find((b) => b.id === state.barbeiro);
 
   function slotsDoDia(dia, duracao) {
@@ -90,13 +108,13 @@ if ("serviceWorker" in navigator) {
   function registrarPedido() {
     if (!AGENDA.ativa) return;
     const tel = telDigitos(state.tel);
-    const chave = [state.data, state.hora, state.servico, state.barbeiro, tel].join("|");
+    const chave = [state.data, state.hora, state.servicos.join(","), state.barbeiro, tel].join("|");
     if (!tel || chave === ultimoPedido) return;
     ultimoPedido = chave;
     AGENDA.db.collection("pedidos").add({
       nome: state.nome.trim().slice(0, 60),
       telefone: tel,
-      servicoId: svc().id, servicoNome: svc().nome,
+      servicoId: svc().id, servicoNome: svc().nome.slice(0, 60),
       barbeiroId: brb().id, barbeiroNome: brb().nome,
       data: state.data, inicio: state.hora, fim: state.hora + svc().min,
       status: "pendente",
@@ -153,7 +171,7 @@ if ("serviceWorker" in navigator) {
       '<a class="btn btn-small go" href="#agendar" data-servico="' + s.id + '">Agendar</a></li>'
     ).join("");
     $("#servicoOpcoes").innerHTML = SERVICOS.map((s) =>
-      '<label class="opt"><input class="vh" type="radio" name="servico" id="sv-' + s.id + '" value="' + s.id + '"' + (s.id === state.servico ? " checked" : "") + '>' +
+      '<label class="opt"><input class="vh" type="checkbox" name="servico" id="sv-' + s.id + '" value="' + s.id + '"' + (state.servicos.indexOf(s.id) >= 0 ? " checked" : "") + '>' +
       '<span class="opt-body"><b>' + s.nome + '</b><span>' + s.min + " min · " + precoTxt(s.preco) + "</span></span></label>"
     ).join("");
   }
@@ -189,6 +207,11 @@ if ("serviceWorker" in navigator) {
   function renderSlots() {
     const box = $("#horarios");
     const dia = parseISO(state.data);
+    if (!svc().qtd) {
+      state.hora = null;
+      box.innerHTML = '<p class="note">Marque pelo menos um serviço acima para ver os horários.</p>';
+      return;
+    }
     if (!CONFIG.horarios[dia.getDay()]) {
       state.hora = null;
       box.innerHTML = '<p class="note">A barbearia fecha neste dia. Escolha outra data.</p>';
@@ -228,11 +251,11 @@ if ("serviceWorker" in navigator) {
       "*Novo agendamento* - " + CONFIG.nome,
       "",
       "*Nome:* " + state.nome.trim(),
-      "*Serviço:* " + svc().nome,
+      "*Serviço" + (svc().qtd > 1 ? "s (combo)" : "") + ":* " + svc().nome,
       "*Barbeiro:* " + brb().nome,
       "*Data:* " + dataLonga(),
       "*Hora:* " + horaFmt(state.hora),
-      "*Valor:* " + (svc().preco == null ? "a combinar" : moeda(svc().preco)),
+      "*Valor:* " + (svc().preco == null ? "a combinar" : svc().desconto ? moeda(svc().preco) + " (combo com " + svc().pct + "% de desconto)" : moeda(svc().preco)),
       "",
       "Aguardo a confirmação."
     ].join("\n");
@@ -246,17 +269,22 @@ if ("serviceWorker" in navigator) {
   function listaPt(f) { return f.length > 1 ? f.slice(0, -1).join(", ") + " e " + f[f.length - 1] : f.join(""); }
   function faltando() {
     const f = [];
+    if (!svc().qtd) f.push("serviço");
     if (state.hora == null) f.push("horário");
     if (state.nome.trim().length < 2) f.push("nome");
     if (AGENDA.ativa && !telDigitos(state.tel)) f.push("WhatsApp com DDD");
     return f;
   }
   function atualizarResumo() {
-    $("#rServ").textContent = svc().nome;
+    $("#rServ").textContent = svc().qtd ? svc().nome : "Escolha";
     $("#rBarb").textContent = brb().nome;
     $("#rData").textContent = dataLonga();
     $("#rHora").textContent = state.hora == null ? "Escolha" : horaFmt(state.hora);
-    $("#rTotal").textContent = precoTxt(svc().preco);
+    $("#rTotal").textContent = svc().qtd ? precoTxt(svc().preco) : "—";
+    $("#rDescLinha").hidden = !svc().desconto;
+    $("#rDescRot").textContent = "Desconto do combo (" + svc().pct + "%)";
+    $("#rDesc").textContent = "- " + moeda(svc().desconto);
+    desenharCombo();
 
     const f = faltando();
     const btn = $("#enviar");
@@ -285,9 +313,42 @@ if ("serviceWorker" in navigator) {
     }
   }
 
+  // Caixa "Seu combo": serviços, tempo, subtotal, desconto e preço final
+  function desenharCombo() {
+    const c = svc(), pct = PCT;
+    if (!c.qtd) {
+      $("#dicaCombo").textContent = pct ? "Marque os serviços que quiser. Com 2 ou mais, você ganha " + pct + "% de desconto no total." : "Marque os serviços que quiser.";
+      $("#comboBox").innerHTML = '<h4>Seu combo</h4><p class="obs">Nenhum serviço marcado ainda. Toque nos serviços acima para ver o preço.</p>';
+      return;
+    }
+    $("#dicaCombo").textContent = pct
+      ? "Marque os serviços que quiser. Com 2 ou mais, você ganha " + pct + "% de desconto no total."
+      : "Marque os serviços que quiser.";
+    let h = '<h4>Seu combo</h4><ul>' + c.lista.map((s) => "<li><span>" + s.nome + "</span><span>" + precoTxt(s.preco) + "</span></li>").join("") + "</ul>" +
+      '<p class="linha"><span>Tempo total</span><span>' + c.min + " min</span></p>";
+    if (c.subtotal != null && c.desconto) {
+      h += '<p class="linha"><span>Subtotal</span><span>' + moeda(c.subtotal) + "</span></p>" +
+        '<p class="linha desc"><span>Desconto de ' + c.pct + "%</span><span>- " + moeda(c.desconto) + "</span></p>";
+    }
+    h += '<p class="final"><span>Preço final</span><strong>' + (c.preco == null ? "A combinar" : moeda(c.preco)) + "</strong></p>";
+    if (c.semPreco) h += '<p class="obs">Um dos serviços tem valor combinado, então o desconto é calculado na confirmação.</p>';
+    else if (c.qtd === 1 && pct && SERVICOS.length > 1) h += '<p class="obs">Adicione mais um serviço para ganhar ' + pct + "% de desconto.</p>";
+    $("#comboBox").innerHTML = h;
+  }
+  // Botões "Agendar" da lista de preços escolhem só aquele serviço
   function escolherServico(id) {
-    state.servico = id;
-    const r = $("#sv-" + id); if (r) r.checked = true;
+    state.servicos = [id];
+    document.querySelectorAll('#servicoOpcoes input').forEach((i) => { i.checked = i.value === id; });
+    state.hora = null;
+    atualizarTudo();
+  }
+  function alternarServico(id, marcado) {
+    const i = state.servicos.indexOf(id);
+    if (marcado && i < 0) state.servicos.push(id);
+    if (!marcado && i >= 0) {
+      state.servicos.splice(i, 1);
+    }
+    state.hora = null;
     atualizarTudo();
   }
   function escolherBarbeiro(id) {
@@ -301,7 +362,7 @@ if ("serviceWorker" in navigator) {
     const a = e.target.closest("a[data-servico]"); if (a) escolherServico(a.dataset.servico);
     const b = e.target.closest("a[data-barbeiro]"); if (b) escolherBarbeiro(b.dataset.barbeiro);
   });
-  $("#servicoOpcoes").addEventListener("change", (e) => { if (e.target.name === "servico") escolherServico(e.target.value); });
+  $("#servicoOpcoes").addEventListener("change", (e) => { if (e.target.name === "servico") alternarServico(e.target.value, e.target.checked); });
   $("#barbeiro").addEventListener("change", (e) => escolherBarbeiro(e.target.value));
   $("#data").addEventListener("change", (e) => {
     if (e.target.value) state.data = e.target.value;

@@ -56,6 +56,13 @@
   let pararPedidos = null;
   let iniciado = false;
   const servicos = SERVICOS;
+  // Pedido de combo (vários serviços): vira uma opção temporária com o tempo total do pedido (fim - início)
+  let extra = null;
+  const todos = () => (extra ? servicos.concat([extra]) : servicos);
+  const achaServ = (id) => todos().find((x) => x.id === id);
+  function montarServicos() {
+    $("#servicoSel").innerHTML = todos().map((s) => '<option value="' + esc(s.id) + '">' + esc(s.nome) + " (" + s.min + " min)</option>").join("");
+  }
   const barbeiros = BARBEIROS.filter((b) => b.id !== "qualquer");
 
   // ---- Login ----
@@ -90,7 +97,7 @@
 
   // ---- Agenda ----
   function iniciar() {
-    $("#servicoSel").innerHTML = servicos.map((s) => '<option value="' + s.id + '">' + esc(s.nome) + " (" + s.min + " min)</option>").join("");
+    montarServicos();
     $("#barbeiroSel").innerHTML = barbeiros.map((b) => '<option value="' + b.id + '">' + esc(b.nome) + "</option>").join("");
     $("#dia").value = toISO(new Date());
     carregarDia();
@@ -135,10 +142,12 @@
     pedidoAtual = p;
     $("#nome").value = p.nome;
     $("#tel").value = telBonito(p.telefone);
-    if (servicos.some((x) => x.id === p.servicoId)) $("#servicoSel").value = p.servicoId;
+    extra = p.servicoId === "combo-montado" || !servicos.some((x) => x.id === p.servicoId) ? { id: "combo-pedido", nome: "Combo: " + p.servicoNome, min: p.fim - p.inicio } : null;
+    montarServicos();
+    $("#servicoSel").value = extra ? extra.id : p.servicoId;
     $("#dia").value = p.data;
     await carregarDia();
-    const serv = servicos.find((x) => x.id === $("#servicoSel").value);
+    const serv = achaServ($("#servicoSel").value);
     let barbId = p.barbeiroId;
     if (barbId === "qualquer" || !barbeiros.some((b) => b.id === barbId)) {
       const livre = barbeiros.find((b) => !reservas.some((r) => r.barbeiroId === b.id && p.inicio < r.fim && p.inicio + serv.min > r.inicio));
@@ -221,7 +230,7 @@
       return;
     }
     sel.disabled = false; btn.disabled = false;
-    const serv = servicos.find((s) => s.id === $("#servicoSel").value);
+    const serv = achaServ($("#servicoSel").value);
     const barb = $("#barbeiroSel").value;
     const antes = sel.value;
     let opcoes = "";
@@ -246,7 +255,7 @@
     erro.textContent = ""; ok.textContent = "";
     const nome = $("#nome").value.trim();
     const dia = $("#dia").value;
-    const serv = servicos.find((s) => s.id === $("#servicoSel").value);
+    const serv = achaServ($("#servicoSel").value);
     const barb = barbeiros.find((b) => b.id === $("#barbeiroSel").value);
     const inicio = Number($("#hora").value);
     if (nome.length < 2) { erro.textContent = "Digite o nome do cliente."; $("#nome").focus(); return; }
@@ -260,7 +269,7 @@
     const lote = db.batch();
     lote.set(ref, {
       nome: nome, telefone: $("#tel").value.trim(),
-      servicoId: serv.id, servicoNome: serv.nome,
+      servicoId: serv.id === "combo-pedido" ? "combo-montado" : serv.id, servicoNome: serv.id === "combo-pedido" ? serv.nome.replace(/^Combo: /, "") : serv.nome,
       barbeiroId: barb.id, barbeiroNome: barb.nome,
       data: dia, inicio: inicio, fim: fim,
       criadoEm: firebase.firestore.FieldValue ? firebase.firestore.FieldValue.serverTimestamp() : null
@@ -271,6 +280,7 @@
     try {
       await lote.commit();
       if (doPedido) { pedidoAtual = null; $("#infoPedido").hidden = true; }
+      if (extra) { extra = null; montarServicos(); desenharHoras(); }
       ok.textContent = "Confirmado: " + nome + ", " + horaFmt(inicio) + ". O horário já saiu do site." +
         (telZap($("#tel").value) ? " Use \"Avisar cliente\" na lista para mandar a confirmação no WhatsApp." : " Sem telefone, não dá para avisar pelo WhatsApp.");
       $("#nome").value = ""; $("#tel").value = "";

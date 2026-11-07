@@ -103,8 +103,10 @@
       <div class="book">
         <form class="panel" id="form" novalidate>
           <fieldset>
-            <legend><span class="step" aria-hidden="true">1</span>Serviço</legend>
-            <div class="opts" id="servicoOpcoes" role="radiogroup" aria-label="Serviço"></div>
+            <legend><span class="step" aria-hidden="true">1</span>Monte seu combo</legend>
+            <p class="sub" id="dicaCombo"></p>
+            <div class="opts" id="servicoOpcoes" role="group" aria-label="Serviços"></div>
+            <div class="combo" id="comboBox" aria-live="polite"></div>
           </fieldset>
 
           <fieldset>
@@ -140,10 +142,11 @@
         <aside class="panel summary" aria-label="Resumo do agendamento">
           <h3>Resumo</h3>
           <dl class="sum">
-            <div><dt>Serviço</dt><dd id="rServ"></dd></div>
+            <div><dt>Serviços</dt><dd id="rServ"></dd></div>
             <div><dt>Barbeiro</dt><dd id="rBarb"></dd></div>
             <div><dt>Data</dt><dd id="rData"></dd></div>
             <div><dt>Hora</dt><dd id="rHora"></dd></div>
+            <div id="rDescLinha" hidden><dt id="rDescRot">Desconto</dt><dd id="rDesc"></dd></div>
             <div class="total"><dt>Total</dt><dd id="rTotal"></dd></div>
           </dl>
           <a class="btn btn-primary" id="enviar" href="#agendar" target="_blank" rel="noopener" aria-disabled="true">Agendar pelo WhatsApp</a>
