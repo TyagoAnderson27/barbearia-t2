@@ -108,14 +108,72 @@
   }
 
   // ---- Pedidos feitos pelo site (atualizam sozinhos) ----
+  // ---- Alerta de pedido novo (app aberto): som, vibração, aviso na tela, número no título e no ícone ----
+  let vistos = new Set();
+  let primeiraLeitura = true;
+  let audioCtx = null;
+  function destravarAudio() {   // o navegador só libera o som depois de um toque na tela
+    try {
+      if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audioCtx = new AC(); }
+      if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    } catch (e) {}
+  }
+  ["click", "touchstart", "keydown"].forEach((ev) => document.addEventListener(ev, destravarAudio, { passive: true }));
+  function tocarSom() {
+    if (!audioCtx || audioCtx.state !== "running") return;
+    const t0 = audioCtx.currentTime;
+    [[880, 0], [1175, 0.2], [880, 0.4], [1175, 0.6]].forEach((n) => {
+      const osc = audioCtx.createOscillator(), ganho = audioCtx.createGain();
+      osc.type = "sine"; osc.frequency.value = n[0];
+      ganho.gain.setValueAtTime(0.0001, t0 + n[1]);
+      ganho.gain.exponentialRampToValueAtTime(0.4, t0 + n[1] + 0.02);
+      ganho.gain.exponentialRampToValueAtTime(0.0001, t0 + n[1] + 0.18);
+      osc.connect(ganho); ganho.connect(audioCtx.destination);
+      osc.start(t0 + n[1]); osc.stop(t0 + n[1] + 0.2);
+    });
+  }
+  let timerAviso = null;
+  function mostrarAviso(novos) {
+    let el = $("#avisoPedido");
+    if (!el) {
+      el = document.createElement("button");
+      el.type = "button"; el.id = "avisoPedido"; el.className = "aviso-pedido";
+      el.setAttribute("role", "status");
+      el.addEventListener("click", () => { el.hidden = true; $("#blocoPedidos").scrollIntoView({ behavior: "smooth", block: "start" }); });
+      document.body.appendChild(el);
+    }
+    el.textContent = novos.length === 1 ? "Novo pedido de " + novos[0].nome + ". Toque para ver." : novos.length + " novos pedidos. Toque para ver.";
+    el.hidden = false;
+    clearTimeout(timerAviso);
+    timerAviso = setTimeout(() => { el.hidden = true; }, 10000);
+  }
+  function alertarNovos(novos) {
+    tocarSom();
+    try { if (navigator.vibrate) navigator.vibrate([250, 120, 250, 120, 500]); } catch (e) {}
+    mostrarAviso(novos);
+  }
+  function atualizarIndicadores() {
+    const n = pedidos.length;
+    document.title = (n ? "(" + n + ") " : "") + "Agenda " + CONFIG.nome;
+    try {
+      if (n && navigator.setAppBadge) navigator.setAppBadge(n);
+      else if (!n && navigator.clearAppBadge) navigator.clearAppBadge();
+    } catch (e) {}
+  }
+
   function escutarPedidos() {
     if (pararPedidos) pararPedidos();
+    primeiraLeitura = true; vistos = new Set();
     pararPedidos = db.collection("pedidos").where("status", "==", "pendente").onSnapshot((snap) => {
       const hoje = toISO(new Date());
       pedidos = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()))
         .filter((p) => p.data >= hoje)
         .sort((a, b) => (a.data === b.data ? a.inicio - b.inicio : a.data < b.data ? -1 : 1));
+      const novos = pedidos.filter((p) => !vistos.has(p.id));
+      vistos = new Set(pedidos.map((p) => p.id));
       desenharPedidos();
+      if (!primeiraLeitura && novos.length) alertarNovos(novos);
+      primeiraLeitura = false;
     }, (err) => {
       console.warn(err);
       $("#vazioPedidos").hidden = false;
@@ -124,6 +182,7 @@
   }
 
   function desenharPedidos() {
+    atualizarIndicadores();
     $("#contaPedidos").textContent = pedidos.length ? "(" + pedidos.length + ")" : "";
     $("#vazioPedidos").textContent = "Nenhum pedido novo.";
     $("#vazioPedidos").hidden = pedidos.length > 0;

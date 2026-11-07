@@ -351,3 +351,8 @@ section.block.sem-topo { padding-top: 0; }
 .bloco-folga { margin-top: 24px; }
 .form-folga { margin-top: 16px; }
 .titulo-folgas { margin-top: 24px; font: 700 22px/1.1 var(--font-label); letter-spacing: .06em; text-transform: uppercase; }
+
+/* ---- Painel: aviso de pedido novo ---- */
+.aviso-pedido { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 9000;
+  max-width: calc(100% - 32px); padding: 14px 22px; border: 2px solid var(--ink); border-radius: 8px; background: var(--red); color: var(--on-red);
+  font: 700 18px/1.2 var(--font-label); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; box-shadow: 0 10px 30px rgba(0, 0, 0, .6); }
