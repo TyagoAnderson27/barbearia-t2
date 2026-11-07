@@ -330,3 +330,24 @@ section.block.sem-topo { padding-top: 0; }
     0% { transform: scale(0.95); opacity: 0.9; }
     100% { transform: scale(1.05); opacity: 1; }
 }
+
+/* ---- Monte seu combo ---- */
+.opt-body { position: relative; padding-right: 44px; }
+.opt-body::after { content: ""; position: absolute; top: 12px; right: 12px; width: 20px; height: 20px; border: 2px solid var(--muted); border-radius: 4px; }
+.opt input:checked + .opt-body::after { background: var(--red) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M4.5 10.5l4 4 7-8' fill='none' stroke='white' stroke-width='2.5'/%3E%3C/svg%3E") center/16px no-repeat; border-color: var(--red); }
+#dicaCombo { margin: 0 0 12px; line-height: 1.4; text-transform: none; letter-spacing: 0; font-size: 15px; }
+.combo { margin-top: 16px; padding: 16px; border: 1px dashed var(--line); border-radius: 6px; background: var(--surface); }
+.combo h4 { margin: 0 0 8px; font: 700 20px/1 var(--font-label); letter-spacing: .06em; text-transform: uppercase; }
+.combo ul { list-style: none; margin: 0 0 8px; padding: 0; }
+.combo li, .combo .linha, .combo .final { display: flex; justify-content: space-between; gap: 16px; margin: 0; padding: 4px 0; font-variant-numeric: tabular-nums; }
+.combo .linha { color: var(--muted); }
+.combo .linha.desc { color: #6fd08c; font-weight: 600; }
+.combo .final { align-items: baseline; margin-top: 6px; padding-top: 10px; border-top: 2px solid var(--ink); }
+.combo .final strong { font: 800 34px/1 var(--font-display); }
+.combo .obs { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+.sum #rDescLinha dd { color: #6fd08c; }
+
+/* ---- Painel: folga do barbeiro ---- */
+.bloco-folga { margin-top: 24px; }
+.form-folga { margin-top: 16px; }
+.titulo-folgas { margin-top: 24px; font: 700 22px/1.1 var(--font-label); letter-spacing: .06em; text-transform: uppercase; }

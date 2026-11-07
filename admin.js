@@ -99,6 +99,9 @@
   function iniciar() {
     montarServicos();
     $("#barbeiroSel").innerHTML = barbeiros.map((b) => '<option value="' + b.id + '">' + esc(b.nome) + "</option>").join("");
+    $("#folgaBarbeiro").innerHTML = barbeiros.map((b) => '<option value="' + esc(b.id) + '">' + esc(b.nome) + "</option>").join("");
+    $("#folgaData").value = toISO(new Date());
+    carregarFolgas();
     $("#dia").value = toISO(new Date());
     carregarDia();
     escutarPedidos();
@@ -205,6 +208,10 @@
 
   function desenharLista() {
     $("#lista").innerHTML = reservas.map((r) => {
+      if (r.tipo === "folga") {
+        return '<li><div class="hora">Folga</div><div class="info"><b>' + esc(r.barbeiroNome) + '</b><span>Todos os horários suspensos neste dia</span></div>' +
+          '<div class="acoes"><button type="button" class="btn btn-small" data-cancelar="' + esc(r.id) + '">Reativar horários</button></div></li>';
+      }
       const link = linkAviso(r);
       const aviso = link
         ? '<a class="btn btn-small" href="' + esc(link) + '" target="_blank" rel="noopener">Avisar cliente</a>'
@@ -296,18 +303,103 @@
     const b = e.target.closest("[data-cancelar]");
     if (!b) return;
     const r = reservas.find((x) => x.id === b.dataset.cancelar);
-    if (!r || !window.confirm("Cancelar o horário de " + r.nome + " às " + horaFmt(r.inicio) + "? Ele volta a aparecer livre no site.")) return;
+    if (!r || !window.confirm(r.tipo === "folga" ? "Reativar os horários de " + r.barbeiroNome + " neste dia?" : "Cancelar o horário de " + r.nome + " às " + horaFmt(r.inicio) + "? Ele volta a aparecer livre no site.")) return;
     try {
       const lote = db.batch();
       lote.delete(db.collection("agendamentos").doc(r.id));
       lote.delete(db.collection("ocupados").doc(r.id));
       await lote.commit();
-      $("#okForm").textContent = "Horário cancelado e liberado no site.";
+      $("#okForm").textContent = r.tipo === "folga" ? "Horários do barbeiro reativados." : "Horário cancelado e liberado no site.";
+      if (r.tipo === "folga") carregarFolgas();
       $("#erroForm").textContent = "";
       await carregarDia();
     } catch (err) {
       console.warn(err);
       $("#erroForm").textContent = "Não foi possível cancelar. Tente de novo.";
+    }
+  });
+  // ---- Folga do barbeiro: suspende todos os horários dele no dia (a barbearia continua aberta) ----
+  // Grava um "ocupados" de dia inteiro (00:00 às 24:00) para aquele barbeiro. O site já esconde os horários dele.
+  let folgas = [];
+  async function carregarFolgas() {
+    try {
+      const snap = await db.collection("agendamentos").where("tipo", "==", "folga").get();
+      const hoje = toISO(new Date());
+      folgas = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())).filter((f) => f.data >= hoje)
+        .sort((x, y) => (x.data === y.data ? (x.barbeiroNome < y.barbeiroNome ? -1 : 1) : x.data < y.data ? -1 : 1));
+    } catch (e) { console.warn(e); folgas = []; }
+    desenharFolgas();
+  }
+  function desenharFolgas() {
+    $("#vazioFolgas").hidden = folgas.length > 0;
+    $("#listaFolgas").innerHTML = folgas.map((f) => {
+      const d = parseISO(f.data);
+      return '<li><div class="hora">' + pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + '</div>' +
+        '<div class="info"><b>' + esc(f.barbeiroNome) + '</b><span>' + esc(dataLonga(f.data)) + ' · dia inteiro</span></div>' +
+        '<div class="acoes"><button type="button" class="btn btn-small" data-folga-reativar="' + esc(f.id) + '">Reativar horários</button></div></li>';
+    }).join("");
+  }
+  $("#formFolga").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const erro = $("#erroFolga"), ok = $("#okFolga");
+    erro.textContent = ""; ok.textContent = "";
+    const barb = barbeiros.find((b) => b.id === $("#folgaBarbeiro").value);
+    const de = $("#folgaData").value;
+    const ate = $("#folgaAte").value || de;
+    if (!barb || !de) { erro.textContent = "Escolha o barbeiro e o dia."; return; }
+    if (ate < de) { erro.textContent = "A data final precisa ser igual ou depois da inicial."; return; }
+    const dias = [];
+    for (let d = parseISO(de); toISO(d) <= ate && dias.length <= 60; d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)) {
+      if (CONFIG.horarios[d.getDay()]) dias.push(toISO(d));   // pula os dias em que a barbearia fecha
+    }
+    if (dias.length > 60) { erro.textContent = "Escolha no máximo 60 dias de uma vez."; return; }
+    if (!dias.length) { erro.textContent = "A barbearia fecha em todos esses dias, não precisa suspender."; return; }
+    const btn = $("#btnFolga");
+    btn.disabled = true;
+    try {
+      // avisa se o barbeiro já tem cliente marcado nesses dias (os clientes continuam marcados)
+      let marcados = 0;
+      for (const dia of dias) {
+        const snap = await db.collection("agendamentos").where("data", "==", dia).get();
+        marcados += snap.docs.filter((d) => { const x = d.data(); return x.tipo !== "folga" && x.barbeiroId === barb.id; }).length;
+      }
+      if (marcados && !window.confirm(barb.nome + " já tem " + marcados + " cliente(s) marcado(s) nesse período. Eles continuam marcados e você precisa avisá-los. Suspender os horários mesmo assim?")) return;
+      const lote = db.batch();
+      dias.forEach((dia) => {
+        const id = "folga_" + barb.id + "_" + dia;
+        lote.set(db.collection("agendamentos").doc(id), {
+          tipo: "folga", nome: "", telefone: "", servicoId: "", servicoNome: "",
+          barbeiroId: barb.id, barbeiroNome: barb.nome, data: dia, inicio: 0, fim: 1440,
+          criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        lote.set(db.collection("ocupados").doc(id), { data: dia, barbeiro: barb.id, inicio: 0, fim: 1440 });
+      });
+      await lote.commit();
+      ok.textContent = barb.nome + ": horários suspensos em " + dias.length + " dia(s). Eles já sumiram do site.";
+      $("#folgaAte").value = "";
+      await Promise.all([carregarFolgas(), carregarDia()]);
+    } catch (err) {
+      console.warn(err);
+      erro.textContent = "Não foi possível suspender. Confira a internet e as regras do Firestore.";
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  $("#listaFolgas").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-folga-reativar]");
+    if (!b) return;
+    const f = folgas.find((x) => x.id === b.dataset.folgaReativar);
+    if (!f || !window.confirm("Reativar os horários de " + f.barbeiroNome + " em " + dataLonga(f.data) + "? Eles voltam a aparecer no site.")) return;
+    try {
+      const lote = db.batch();
+      lote.delete(db.collection("agendamentos").doc(f.id));
+      lote.delete(db.collection("ocupados").doc(f.id));
+      await lote.commit();
+      $("#okFolga").textContent = "Horários de " + f.barbeiroNome + " reativados."; $("#erroFolga").textContent = "";
+      await Promise.all([carregarFolgas(), carregarDia()]);
+    } catch (err) {
+      console.warn(err);
+      $("#erroFolga").textContent = "Não foi possível reativar. Tente de novo.";
     }
   });
 })();

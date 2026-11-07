@@ -225,7 +225,11 @@ if ("serviceWorker" in navigator) {
     const lista = slotsDoDia(dia, svc().min).filter((m) => horarioLivre(state.data, m, svc().min));
     if (!lista.length) {
       state.hora = null;
-      box.innerHTML = '<p class="note">Sem horários disponíveis neste dia. Escolha outra data.</p>';
+      const c = AGENDA.cache[state.data];
+      const folga = state.barbeiro !== "qualquer" && c && c.lista.some((o) => o.barbeiro === state.barbeiro && o.inicio === 0 && o.fim === 1440);
+      box.innerHTML = folga
+        ? '<p class="note">' + brb().nome + ' não atende neste dia. Escolha outra data ou outro barbeiro.</p>'
+        : '<p class="note">Sem horários disponíveis neste dia. Escolha outra data.</p>';
       return;
     }
     if (lista.indexOf(state.hora) < 0) state.hora = null;
